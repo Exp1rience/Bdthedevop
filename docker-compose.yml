@@ -1,12 +1,17 @@
-version: '3.9'
-
+version: '3.8'
 services:
-  postgres:
-    image: postgres:16
-    container_name: my_postgres_container
+  db:
+    build: .  # Пересобирает контейнер при каждом запуске
     restart: always
-    env_file: .env
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: mydb
     ports:
       - "5432:5432"
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
+    
