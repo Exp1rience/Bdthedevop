@@ -2,19 +2,30 @@ version: "3.9"
 
 services:
   db:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: my_postgres
-    restart: always
-    ports:
-      - "5432:5432"
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
+      SA_PASSWORD: "YourStrong!Pass123"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - ./init.sql:/init.sql
+    command: /bin/bash -c "/opt/mssql/bin/sqlservr & sleep 30 && /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Pass123' -i /init.sql"
 
-volumes:
-  pg_data:
+  web:
+    build:
+      context: ./web
+    container_name: django_app
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./web:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DB_NAME=mydatabase
+      - DB_USER=sa
+      - DB_PASSWORD=YourStrong!Pass123
+      - DB_HOST=db
